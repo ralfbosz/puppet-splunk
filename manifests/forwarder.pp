@@ -71,7 +71,7 @@ class splunk::forwarder (
 
   $path_delimiter  = $splunk::params::path_delimiter
   #no need for staging the source if we have yum or apt
-  if $pkg_provider != undef and $pkg_provider != 'yum' and  $pkg_provider != 'apt' {
+  if $pkg_provider != undef and $pkg_provider != 'yum' and $pkg_provider != 'apt' and $pkg_provider != 'chocolatey' {
     include ::staging
 
     $staged_package  = staging_parse($package_source)
@@ -153,10 +153,17 @@ class splunk::forwarder (
   Package[$package_name] -> Splunkforwarder_transforms<||> ~> Service[$virtual_service]
   Package[$package_name] -> Splunkforwarder_web<||>        ~> Service[$virtual_service]
 
-  File {
-    owner => $splunk_user,
-    group => $splunk_user,
-    mode => '0644',
+  if $::osfamily == 'windows' {
+    File {
+      owner => $splunk_user,
+      group => $splunk_user,
+    }
+  } else {
+    File {
+      owner => $splunk_user,
+      group => $splunk_user,
+      mode => '0644',
+    }
   }
 
   file { "${forwarder_confdir}/system/local/inputs.conf":
@@ -187,5 +194,4 @@ class splunk::forwarder (
       )
     }
   }
-
 }
